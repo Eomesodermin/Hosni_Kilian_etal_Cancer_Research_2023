@@ -1,0 +1,341 @@
+---
+title: "Hosni_Kilian_analysis"
+author: "Dillon Corvino"
+date: "28/07/2023"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: united
+    highlight: tango
+    df_print: paged
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+Built with R version `r getRversion()`
+
+## Setup {.tabset}
+
+### Dataset information
+```{r Dataset_Info}
+
+# Datset was downloaded from the supplementary data of Chen et al., 2020 
+
+# Title: "Single-cell RNA sequencing highlights the role of inflammatory cancer-associated fibroblats in bladder urothelial carcinoma 
+# Authors: Zhaohui Chen, Lijie Zhou, Lilong Liu, Yaxin Hou, Ming Xiong, Yu Yang, Junyi Hu1, & Ke Chen
+
+########################################
+#For the over view of all cells:
+########################################
+# 1 = Myeloids
+# 2 = Epithelial
+# 3 = mCAF
+# 4 = iCAF
+# 5 = Endothelial
+# 6 = T cell
+# 7 = B cell
+# 8 = Mast cell
+
+
+######################
+#For the Myeloid lineage, the number for each cluster correspond to one cell type in this paper as listed below:
+#1: CD1C+ DC; 2: TAM; 3: proliferating myeloid; 4: Doublets(Epithelial); 5: Doublets(Endothelial); 6: Cross-presenting DC; 7: Monocyte; 8: LAMP3+ DC; 9: B cell.
+
+#For the Fibroblast lineage:
+#Numbers of each cluster is the same as shown in Figure 3A.
+
+
+
+```
+
+
+### Environment
+```{r setup}
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,  
+  eval = TRUE, 
+  tidy = TRUE
+)
+
+knitr::opts_knit$set(
+  root.dir = "../"
+)
+
+
+# Environment Set up
+rm(list = ls()) #Clean workspace
+cat("\014")     #Clean Console
+gc() # Free memory
+
+# Establish working directory
+library("rstudioapi")
+
+# Set working directory to source file location
+setwd(dirname(getActiveDocumentContext()$path))
+setwd("..")
+
+# Create output directories & load custom functions & colour scheme
+source("scripts/Setup.R", local = knitr::knit_global())
+
+long.compute <- FALSE
+quick.load <- TRUE
+
+# Load packages
+library("Seurat")
+library("SeuratDisk")
+#devtools::install_github(repo = "samuel-marsh/scCustomize")
+library("scCustomize")
+library("dplyr")
+library("Nebulosa")
+
+# Colour scheme 
+#install.packages('scico')
+library("scico")
+
+#scico_palette_show()
+batlow.pal <- scico(100, palette = 'batlow')
+
+
+if(quick.load){
+  All.cells.seurat <- SeuratDisk::LoadH5Seurat("saves/All_cells.h5Seurat")
+  DefaultAssay(All.cells.seurat) <- "RNA"
+
+}
+
+
+# Create output directory
+output.dir <- "results/figure_5/"
+
+if(!dir.exists(output.dir)){
+  dir.create(output.dir,
+             recursive = T)}
+
+
+```
+
+
+## Pre-processing {.tabset}
+
+
+### Read and format dataset
+```{r reading_dataset}
+
+if(long.compute){
+  
+  # Load dataset
+  base::load("data/all_cell_filtered_CellView.rds")
+  
+  # quick visualisation of dataset
+  featuredata$Associated.Gene.Name
+  sum(duplicated(featuredata$Associated.Gene.Name))
+  sum(rownames(log2cpm) != rownames(featuredata))
+  log2cpm[1:10,1:10]
+  
+  # format metadata
+  colnames(tsne.data)
+  colnames(tsne.data)[1:3] <- c("tSNE_1", "tSNE_2", "tSNE_3")
+  colnames(tsne.data)
+  
+  
+  # Create seurat object
+  seurat.object <- CreateSeuratObject(counts = log2cpm,
+                                      row.names = featuredata$Associated.Gene.Name,
+                                      min.cells = 3, 
+                                      project = "Chen_etal",
+                                      meta.data = tsne.data,
+                                      min.genes = 200)
+  
+  # Format metadata
+  tsne.data <- tsne.data[,-4]
+  tsne.data <- as.matrix(tsne.data)
+  
+  # add metadata
+  seurat.object[["tsne"]] <- CreateDimReducObject(embeddings = tsne.data,
+                                                  key = "tSNE_",
+                                                  assay = DefaultAssay(seurat.object))
+  
+# Maybe what is orig.ident is patient ID not sure
+#seurat.object@meta.data$Pt_ID <- seurat.object@meta.data$orig.ident
+
+# Rename cluster Idents: 
+Idents(seurat.object) <- seurat.object@meta.data$dbCluster
+
+unique(seurat.object@meta.data$dbCluster)
+
+seurat.object <-RenameIdents(seurat.object, 
+                             "1" = "Myeloids", 
+                             "2" = "Epithelial", 
+                             "3" = "mCAF", 
+                             "4" = "iCAF", 
+                             "5" = "Endothelial", 
+                             "6" = "T_cell", 
+                             "7" = "B_cell", 
+                             "8" = "Mast_cell")
+
+seurat.object@meta.data$dbCluster <- Idents(seurat.object) 
+
+
+# Visualise dataset
+DimPlot(seurat.object,
+        reduction = "tsne",
+        pt.size = 0.5, 
+        group.by = "dbCluster", 
+        label = TRUE)
+        
+# Export dataset for easy import
+SeuratDisk::SaveH5Seurat(seurat.object, "saves/All_cells.h5Seurat")
+
+}
+
+```
+
+
+## Imputation {.tabset}
+
+### Imputate gene expression
+```{r imputation}
+
+if(long.compute){
+  
+# check that genes of interest are in variable genes list 
+All.cells.seurat # 25,521 genes across 52,721 cells
+
+All.cells.seurat <- FindVariableFeatures(All.cells.seurat,
+                                         nfeatures = 2000,
+                                         verbose = TRUE)
+
+
+var.features <- VariableFeatures(All.cells.seurat)
+
+var.features <- unique(c(var.features, "NRG1"))
+
+
+All.cells.seurat@assays$RNA@var.features <- var.features
+
+
+All.cells.seurat <- SeuratWrappers::RunALRA(All.cells.seurat, 
+                                            genes.use = All.cells.seurat@assays$RNA@var.features)
+  
+ # Export dataset for easy import
+SeuratDisk::SaveH5Seurat(All.cells.seurat, "saves/All_cells.h5Seurat", overwrite = TRUE)
+  
+}
+
+
+```
+
+## Analysis {.tabset}
+
+
+### Figure 5B
+```{r Figure_5B}
+
+DefaultAssay(All.cells.seurat) <- "RNA"
+Idents(All.cells.seurat) <- All.cells.seurat@meta.data$dbCluster
+
+
+# Published clusters
+DimPlot(All.cells.seurat,
+        reduction = "tsne",
+        pt.size = 1, 
+        group.by = "dbCluster", 
+        label = TRUE) +
+  NoLegend()
+
+dev.copy(pdf, paste0(output.dir, "/Figure_5B.pdf"))
+dev.off()
+
+
+```
+ 
+ ### Figure 5C and D
+```{r Figure_5C_D}
+
+DefaultAssay(All.cells.seurat) <- "alra"
+Idents(All.cells.seurat) <- All.cells.seurat@meta.data$dbCluster
+
+
+# Expression of NRG1
+Plot_Density_Custom(All.cells.seurat, 
+                    features = "NRG1",
+                    custom_palette = batlow.pal,
+                    joint = FALSE, 
+                    pt.size = 1, 
+                    reduction = "tsne")
+
+dev.copy(pdf, paste0(output.dir, "/Figure_5C_UMAP.pdf"))
+dev.off()
+
+
+VlnPlot(All.cells.seurat, 
+        features = "NRG1", 
+        pt.size = 0)
+
+dev.copy(pdf, paste0(output.dir, "/Figure_5C_Vlnplot.pdf"))
+dev.off()
+
+
+
+
+# Expression of PDGFRA
+Plot_Density_Custom(All.cells.seurat, 
+                    features = "PDGFRA",
+                    custom_palette = batlow.pal,
+                    joint = FALSE, 
+                    pt.size = 1, 
+                    reduction = "tsne")
+
+dev.copy(pdf, paste0(output.dir, "/Figure_5D_UMAP.pdf"))
+dev.off()
+
+
+VlnPlot(All.cells.seurat, 
+        features = "PDGFRA", 
+        pt.size = 0)
+
+dev.copy(pdf, paste0(output.dir, "/Figure_5D_Vlnplot.pdf"))
+dev.off()
+
+
+
+```
+ 
+### rebuttle plots
+```{r rebuttle_plots}
+ 
+DefaultAssay(All.cells.seurat) <- "RNA"
+goi <- c("PI16", "DPP4", "CD55", "PDGFRA", "COL15A1", "COL5A3", "MMP3", "PDGFRB", 
+         #"CLD",
+         "APOD")
+
+
+# not found DPP4, CD55, CLD
+# DPP4 , CD55is in RNA slot, not imputed 
+# CLD not found
+
+
+for(i in seq_along(goi)){
+
+  print(
+Plot_Density_Custom(All.cells.seurat, 
+                    features = goi[i],
+                    custom_palette = batlow.pal,
+                    joint = FALSE, 
+                    pt.size = 1, 
+                    reduction = "tsne")
+)
+dev.copy(pdf, paste0(output.dir, "/temp_", goi[i], "_non_imputed.pdf"))
+dev.off()
+}
+
+
+
+```
+
+
