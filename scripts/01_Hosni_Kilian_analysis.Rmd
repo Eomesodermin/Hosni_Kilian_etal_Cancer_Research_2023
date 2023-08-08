@@ -206,6 +206,8 @@ if(long.compute){
 # check that genes of interest are in variable genes list 
 All.cells.seurat # 25,521 genes across 52,721 cells
 
+  DefaultAssay(All.cells.seurat) <- "RNA"
+  
 All.cells.seurat <- FindVariableFeatures(All.cells.seurat,
                                          nfeatures = 2000,
                                          verbose = TRUE)
@@ -213,7 +215,7 @@ All.cells.seurat <- FindVariableFeatures(All.cells.seurat,
 
 var.features <- VariableFeatures(All.cells.seurat)
 
-var.features <- unique(c(var.features, "NRG1"))
+var.features <- unique(c(var.features, "NRG1", "DPP4"))
 
 
 All.cells.seurat@assays$RNA@var.features <- var.features
@@ -254,7 +256,7 @@ dev.off()
 
 ```
  
- ### Figure 5C and D
+### Figure 5C and D
 ```{r Figure_5C_D}
 
 DefaultAssay(All.cells.seurat) <- "alra"
@@ -332,6 +334,59 @@ Plot_Density_Custom(All.cells.seurat,
 )
 dev.copy(pdf, paste0(output.dir, "/temp_", goi[i], "_non_imputed.pdf"))
 dev.off()
+}
+
+
+for(i in seq_along(goi)){
+
+  print(
+VlnPlot(All.cells.seurat, 
+        features = goi[i], 
+        pt.size = 0)
+)
+
+dev.copy(pdf,paste0(output.dir, "/temp_", goi[i], "_non_imputed_VlnPlot.pdf"))
+dev.off()
+
+}
+
+
+## imputed figures 
+DefaultAssay(All.cells.seurat) <- "alra"
+goi <- c("DPP4", "PI16", "PDGFRA", "COL15A1", "COL5A3", "MMP3", "PDGFRB", "APOD")
+
+# not found, CD55, CLD in imputed data object
+# CD55 are in RNA slot, not imputed 
+# CLD not found in either
+
+
+for(i in seq_along(goi)){
+
+  print(
+Plot_Density_Custom(All.cells.seurat, 
+                    features = goi[i],
+                    custom_palette = batlow.pal,
+                    joint = FALSE, 
+                    pt.size = 1, 
+                    reduction = "tsne")
+)
+dev.copy(pdf, paste0(output.dir, "/temp_", goi[i], "_imputed.pdf"))
+dev.off()
+}
+
+
+
+for(i in seq_along(goi)){
+
+  print(
+VlnPlot(All.cells.seurat, 
+        features = goi[i], 
+        pt.size = 0)
+)
+
+dev.copy(pdf,paste0(output.dir, "/temp_", goi[i], "_imputed_VlnPlot.pdf"))
+dev.off()
+
 }
 
 
