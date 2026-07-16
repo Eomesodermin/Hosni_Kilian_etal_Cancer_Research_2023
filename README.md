@@ -41,6 +41,12 @@ Together, this work reveals a paracrine mechanism of anti-FGFR resistance in bla
 
 ---
 
+## Data availability
+
+The processed single-cell RNA-seq objects (Seurat / CellView) are archived on **Zenodo** (open access): **[10.5281/zenodo.21401004](https://doi.org/10.5281/zenodo.21401004)**. Raw sequencing reads are deposited on GEO — see the published paper's data-availability statement for the accession.
+
+---
+
 ## Code Attribution  
 
 This code and analysis were authored by **Dillon Corvino** — [github.com/Eomesodermin](https://github.com/Eomesodermin) · [dilloncorvino.com](https://dilloncorvino.com).  
