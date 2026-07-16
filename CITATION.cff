@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the associated paper (below)."
+title: "Adipocyte Precursor-Derived NRG1 Promotes Resistance to FGFR — analysis code"
+authors:
+  - family-names: Corvino
+    given-names: Dillon
+    orcid: "https://orcid.org/0000-0003-0683-1369"
+type: software
+repository-code: "https://github.com/BaldLab/Hosni_Kilian_etal_Cancer_Research_2023"
+url: "https://dilloncorvino.com"
+preferred-citation:
+  type: article
+  title: "Adipocyte Precursor-Derived NRG1 Promotes Resistance to FGFR Inhibition in Urothelial Carcinoma"
+  journal: "Cancer Research"
+  year: 2023
+  doi: "10.1158/0008-5472.CAN-23-1398"
+  authors:
+    - family-names: Corvino
+      given-names: Dillon
