@@ -43,4 +43,4 @@ Together, this work reveals a paracrine mechanism of anti-FGFR resistance in bla
 
 ## Code Attribution  
 
-This code and analysis were authored by **Dillon Corvino**.  
+This code and analysis were authored by **Dillon Corvino** — [github.com/Eomesodermin](https://github.com/Eomesodermin) · [dilloncorvino.com](https://dilloncorvino.com).  
