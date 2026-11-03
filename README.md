@@ -49,6 +49,26 @@ The external bladder-cancer single-cell dataset used in the analysis is from Che
 
 ---
 
+## Repository structure
+
+```
+scripts/01_Hosni_Kilian_analysis.Rmd   # single-cell analysis of urothelial carcinoma, including the external Chen et al. 2020 dataset
+scripts/Setup.R                        # environment set-up shared by the notebook
+results/                               # figures produced by the notebook
+```
+
+## Reproducing the analysis
+
+1. Download the processed single-cell objects from Zenodo and the external Chen et al. dataset (see [Data availability](#data-availability)).
+2. Knit `scripts/01_Hosni_Kilian_analysis.Rmd` from the repository root. The notebook sets its working directory with `here::here()` and loads its packages in the Setup chunk, together with the helper package [`r-utility-functions`](https://github.com/Eomesodermin/r-utility-functions).
+
+
+## Citation
+
+To cite the paper, use the DOI above; to cite this code, use the Zenodo DOI in the badge at the top. Machine-readable citation metadata is in [`CITATION.cff`](CITATION.cff).
+
+---
+
 ## Code Attribution  
 
 This code and analysis were authored by **Dillon Corvino** — [github.com/Eomesodermin](https://github.com/Eomesodermin) · [dilloncorvino.com](https://dilloncorvino.com).  
