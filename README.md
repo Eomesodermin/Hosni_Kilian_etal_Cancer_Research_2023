@@ -45,6 +45,8 @@ Together, this work reveals a paracrine mechanism of anti-FGFR resistance in bla
 
 The processed single-cell RNA-seq objects (Seurat / CellView) are archived on **Zenodo** (open access): **[10.5281/zenodo.21401004](https://doi.org/10.5281/zenodo.21401004)**. Raw sequencing reads are deposited on GEO — see the published paper's data-availability statement for the accession.
 
+The external bladder-cancer single-cell dataset used in the analysis is from Chen *et al.*, *Nature Communications* 11, 5077 (2020), [doi:10.1038/s41467-020-18916-5](https://doi.org/10.1038/s41467-020-18916-5); `scripts/01_Hosni_Kilian_analysis.Rmd` documents which supplementary table to download.
+
 ---
 
 ## Code Attribution  
