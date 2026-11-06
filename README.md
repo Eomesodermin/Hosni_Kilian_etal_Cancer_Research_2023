@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/671812871.svg)](https://doi.org/10.5281/zenodo.14865830)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14865830.svg)](https://doi.org/10.5281/zenodo.14865830)
 
 # Adipocyte Precursor-Derived NRG1 Promotes Resistance to FGFR Inhibition in Urothelial Carcinoma
 
